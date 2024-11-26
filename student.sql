@@ -10,3 +10,9 @@ CREATE TABLE students (
     health_status TEXT,                            -- Tình hình sức khỏe
     result TEXT                                     -- Kết quả
 );
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+);
