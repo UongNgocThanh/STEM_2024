@@ -5,6 +5,30 @@
 	{% include 'head.html' %}
 
 </head>
+<style>
+	.custom-table th,
+	.custom-table td {
+		text-align: center;
+		/* Căn giữa nội dung */
+		vertical-align: middle;
+		/* Giữ nội dung căn giữa theo chiều dọc */
+	}
+
+	.custom-table th {
+		font-weight: bold;
+		/* Làm nổi bật tiêu đề */
+	}
+
+	.text-success {
+		color: #28a745;
+		/* Màu xanh */
+	}
+
+	.text-danger {
+		color: #dc3545;
+		/* Màu đỏ */
+	}
+</style>
 
 <body>
 
@@ -159,11 +183,27 @@
 							<li><a href="employee-office.html">Offices</a></li>
 						</ul>
 
-						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm">Add Person</a>
+						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm"><i
+								class="fa-solid fa-plus"></i>Add Person</a>
 					</div>
 				</div>
 
 				<div class="row">
+					<div class="container mt-3">
+						{% with messages = get_flashed_messages(with_categories=True) %}
+						{% if messages %}
+						{% for category, message in messages %}
+						<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+							{{ message }}
+							<!-- Thay đổi nút đóng bằng Font Awesome -->
+							<button type="button" class="close" data-bs-dismiss="alert" aria-label="Đóng">
+								<i class="fa fa-times"></i> <!-- Font Awesome biểu tượng đóng -->
+							</button>
+						</div>
+						{% endfor %}
+						{% endif %}
+						{% endwith %}
+					</div>
 
 
 				</div>
@@ -195,7 +235,7 @@
 
 
 									<tr>
-										<td>{{ student['id'] }}</td>
+										<td>{{ student['student_id'] }}</td>
 										<td>{{ student['age'] }}</td>
 										<td>{{ student['gender'] }}</td>
 										<td>{{ student['economic_status'] }}</td>
@@ -204,114 +244,213 @@
 										<td>{{ student['days_absent'] }}</td>
 										<td>{{ student['part_time_job'] }}</td>
 										<td>{{ student['health_status'] }}</td>
-										<td>{{ student['result'] }}</td>
 										<td>
-											<button class="btn btn-warning edit-btn" data-id="{{ student['id'] }}"
-												data-bs-toggle="modal" data-bs-target="#editStudentModal">Edit</button>
-											<button class="btn btn-danger delete-btn"
-												data-id="{{ student['id'] }}">Delete</button>
+											<!-- Kiểm tra giá trị của 'result' để quyết định màu sắc -->
+											<span class="{% if student.result == 1 %}text-success{% else %}text-danger{% endif %}">
+												{% if student.result == 1 %}Đạt{% else %}Không đạt{% endif %}
+											</span>
+											
+										</td>
+										<td>
+											<!-- Edit button -->
+											<button class="btn btn-warning" data-bs-toggle="modal"
+												data-bs-target="#editStudentModal"><i
+													class="fa-solid fa-pen-to-square"></i></button>
+
+											<!-- Delete button -->
+											<form action="{{ url_for('delete_student', id=student['student_id']) }}"
+												method="POST" style="display:inline;">
+												<button class="btn btn-danger" type="submit"
+													onclick="return confirm('Are you sure you want to delete this student?');"><i
+														class="fa-solid fa-trash"></i></button>
+											</form>
 										</td>
 									</tr>
+									<!-- Edit Modal -->
+									<div class="customize_popup">
+										<div class="modal fade" id="editStudentModal" tabindex="-1"
+											aria-labelledby="editStudentModalLabel{{ student['student_id'] }}"
+											aria-hidden="true">
+											<div class="modal-dialog">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title"
+															id="editStudentModalLabel{{ student['student_id'] }}">Chỉnh
+															sửa thông tin sinh viên</h5>
+														<button type="button" class="btn" data-bs-dismiss="modal"
+															aria-label="Đóng">
+															<i class="fa-solid fa-xmark fa-2xl"
+																style="color: #d70f19;"></i>
+														</button>
+													</div>
+													<div class="modal-body">
+														<form
+															action="{{ url_for('edit_student', id=student['student_id']) }}"
+															method="POST">
+															<!-- Tuổi -->
+															<div class="row">
+																<div class="col-md-6">
+																	<div class="form-group">
+																		<label for="age" class="form-label">Tuổi</label>
+																		<input type="number" class="form-control"
+																			name="age" id="age"
+																			value="{{ student['age'] }}" required>
+																	</div>
+																</div>
+																<div class="col-md-6">
+																	<div class="form-group">
+																		<label for="age" class="form-label">Số Ngày
+																			Vắng</label>
+																		<input type="number" class="form-control"
+																			name="days_absent" id="days_absent"
+																			value="{{ student['days_absent'] }}"
+																			required>
+																	</div>
+																</div>
+
+															</div>
 
 
-								
+															<!-- Giới tính -->
+															<div class="row">
+																<div class="col-md-6">
+																	<div class="form-group">
+																		<label for="gender" class="form-label">Giới
+																			tính</label>
+																		<select class="form-control" name="gender"
+																			id="gender" required>
+																			<option value="" {% if not student['gender']
+																				%}selected{% endif %}>Chọn giới tính
+																			</option>
+																			<option value="Nam" {% if
+																				student['gender']=='Nam' %}selected{%
+																				endif %}>Nam</option>
+																			<option value="Nữ" {% if
+																				student['gender']=='Nữ' %}selected{%
+																				endif %}>Nữ</option>
+																			<option value="Khác" {% if
+																				student['gender']=='Khác' %}selected{%
+																				endif %}>Khác</option>
+																		</select>
+																	</div>
+																</div>
+																<div class="col-md-6">
+																	<div class="form-group">
+																		<label for="economic_status"
+																			class="form-label">Tình trạng kinh
+																			tế</label>
+																		<select class="form-control"
+																			name="economic_status" id="economic_status"
+																			required>
+																			<option value="" {% if not
+																				student['economic_status'] %}selected{%
+																				endif %}>Chọn tình trạng</option>
+																			<option value="Nghèo" {% if
+																				student['economic_status']=='Nghèo'
+																				%}selected{% endif %}>Nghèo</option>
+																			<option value="Cận Nghèo" {% if
+																				student['economic_status']=='Cận Nghèo'
+																				%}selected{% endif %}>Cận Nghèo</option>
+																			<option value="Giàu" {% if
+																				student['economic_status']=='Giàu'
+																				%}selected{% endif %}>Giàu</option>
+																			<option value="Bình Thường" {% if
+																				student['economic_status']=='Bình Thường'
+																				%}selected{% endif %}>Bình Thường
+																			</option>
+
+																		</select>
+																	</div>
+																</div>
+
+															</div>
 
 
-									<script>
-										// Ajax xử lý thêm học sinh
-										$('#addStudentForm').on('submit', function (event) {
-											event.preventDefault();
-											var formData = {
-												name: $('#name').val(),
-												age: $('#age').val(),
-												gender: $('#gender').val(),
-												economic_status: $('#economic_status').val(),
-												gpa: $('#gpa').val(),
-												credits_completed: $('#credits_completed').val(),
-												days_absent: $('#days_absent').val(),
-												part_time_job: $('#part_time_job').val(),
-												health_status: $('#health_status').val(),
-												result: $('#result').val(),
-											};
+															<!-- Tình trạng kinh tế -->
 
-											$.ajax({
-												url: '/students/create',
-												method: 'POST',
-												data: formData,
-												success: function (response) {
-													alert(response.message);
-													location.reload();
-												}
-											});
-										});
 
-										// Ajax xử lý sửa học sinh
-										$('#editStudentForm').on('submit', function (event) {
-											event.preventDefault();
-											var formData = {
-												name: $('#editName').val(),
-												age: $('#editAge').val(),
-												gender: $('#editGender').val(),
-												economic_status: $('#editEconomicStatus').val(),
-												gpa: $('#editGPA').val(),
-												credits_completed: $('#editCreditsCompleted').val(),
-												days_absent: $('#editDaysAbsent').val(),
-												part_time_job: $('#editPartTimeJob').val(),
-												health_status: $('#editHealthStatus').val(),
-												result: $('#editResult').val(),
-											};
+															<!-- Điểm trung bình (GPA) -->
+															<div class="form-group">
+																<label for="gpa" class="form-label">Điểm trung bình
+																	(GPA)</label>
+																<input type="number" step="0.01" class="form-control"
+																	name="gpa" id="gpa" value="{{ student['gpa'] }}"
+																	required>
+															</div>
 
-											var studentId = $('#editStudentId').val();
+															<!-- Số tín chỉ hoàn thành -->
+															<div class="form-group">
+																<label for="credits_completed" class="form-label">Số tín
+																	chỉ đã hoàn thành</label>
+																<input type="number" class="form-control"
+																	name="credits_completed" id="credits_completed"
+																	value="{{ student['credits_completed'] }}" required>
+															</div>
 
-											$.ajax({
-												url: '/students/update/' + studentId,
-												method: 'POST',
-												data: formData,
-												success: function (response) {
-													alert(response.message);
-													location.reload();
-												}
-											});
-										});
+															<!-- Công việc bán thời gian -->
+															<div class="form-group">
+																<label for="part_time_job" class="form-label">Công việc
+																	bán thời gian</label>
+																<select class="form-control" name="part_time_job"
+																	id="part_time_job" required>
+																	<option value="" {% if not student['part_time_job']
+																		%}selected{% endif %}>Chọn trạng thái</option>
+																	<option value="Có" {% if
+																		student['part_time_job']=='Có' %}selected{%
+																		endif %}>Có</option>
+																	<option value="Không" {% if
+																		student['part_time_job']=='Không' %}selected{%
+																		endif %}>Không</option>
+																</select>
+															</div>
 
-										// Ajax xử lý nút sửa học sinh
-										$('.edit-btn').on('click', function () {
-											var studentId = $(this).data('id');
-											$.ajax({
-												url: '/students/' + studentId,
-												method: 'GET',
-												success: function (response) {
-													$('#editStudentId').val(response.id);
-													$('#editName').val(response.name);
-													$('#editAge').val(response.age);
-													$('#editGender').val(response.gender);
-													$('#editEconomicStatus').val(response.economic_status);
-													$('#editGPA').val(response.gpa);
-													$('#editCreditsCompleted').val(response.credits_completed);
-													$('#editDaysAbsent').val(response.days_absent);
-													$('#editPartTimeJob').val(response.part_time_job);
-													$('#editHealthStatus').val(response.health_status);
-													$('#editResult').val(response.result);
-												}
-											});
-										});
+															<!-- Tình trạng sức khỏe -->
+															<div class="form-group">
+																<label for="health_status" class="form-label">Tình trạng
+																	sức khỏe</label>
+																<select class="form-control" name="health_status"
+																	id="health_status" required>
+																	<option value="" {% if not student['health_status']
+																		%}selected{% endif %}>Chọn tình trạng sức khỏe
+																	</option>
+																	<option value="Bị Bệnh" {% if
+																		student['health_status']=='Bị Bệnh' %}selected{%
+																		endif %}>Bị Bệnh</option>
+																	<option value="Bình Thường " {% if
+																		student['health_status']=='Bình Thường '
+																		%}selected{% endif %}>Bình Thường </option>
+																</select>
+															</div>
 
-										// Xử lý nút xóa học sinh
-										$('.delete-btn').on('click', function () {
-											var studentId = $(this).data('id');
-											if (confirm("Are you sure you want to delete this student?")) {
-												$.ajax({
-													url: '/students/delete/' + studentId,
-													method: 'POST',
-													success: function (response) {
-														alert(response.message);
-														location.reload();
-													}
-												});
-											}
-										});
-									</script>
+															<!-- Kết quả -->
+															<div class="form-group">
+																<label for="result" class="form-label">Kết quả</label>
+																<select class="form-control" name="result" id="result"
+																	required>
+																	<option value="" {% if not student['result']
+																		%}selected{% endif %}>Chọn kết quả</option>
+																	<option value="0" {% if student['result']=='0'
+																		%}selected{% endif %}>0</option>
+																	<option value="1" {% if student['result']=='1'
+																		%}selected{% endif %}>1</option>
+																</select>
+															</div>
+
+															<!-- Nút cập nhật -->
+															<div class="d-flex justify-content-end mt-3">
+																<button type="submit" class="btn btn-primary">Cập
+																	nhật</button>
+															</div>
+														</form>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+
+
 									{% endfor %}
+
 
 								</tbody>
 							</table>
@@ -326,119 +465,147 @@
 	</div>
 
 	</div>
-	
+
+
+
 	<!-- Add Student Modal -->
 	<div class="customize_popup">
-
-									<div class="modal fade" id="addStudentForm" tabindex="-1"
-										aria-labelledby="addStudentModalLabel" aria-hidden="true">
-										<div class="modal-dialog">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h5 class="modal-title" id="addStudentModalLabel">Add New Student
-													</h5>
-													<button type="button" class="btn-close" data-bs-dismiss="modal"
-														aria-label="Close"></button>
-												</div>
-												<div class="modal-body">
-													<form id="addStudentForm">
-														<div class="row">
-															<div class="col-xl-6 col-sm-12 col-12">
-																<div class="form-group">
-																	<input type="text" placeholder="Age"  name="age" required>
-																</div>
-															</div>
-															<div class="col-xl-6 col-sm-12 col-12">
-																<div class="form-group">
-																	<select class="form-control" required>
-																		<option value="">Gender</option>
-																		
-																	</select>
-																</div>
-															</div>
-														</div>
-														<div class="mb-3">
-															<label for="age" class="form-label">Age</label>
-															<input type="number" class="form-control" id="age" required>
-														</div>
-														<div class="mb-3">
-															<label for="gender" class="form-label">Gender</label>
-															<input type="text" class="form-control" id="gender"
-																required>
-														</div>
-														<div class="mb-3">
-															<label for="gpa" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="gpa" required>
-														</div>
-														<div class="mb-3">
-															<label for="gpa" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="gpa" required>
-														</div>
-														<div class="mb-3">
-															<label for="gpa" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="gpa" required>
-														</div>
-														<div class="mb-3">
-															<label for="gpa" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="gpa" required>
-														</div>
-														<div class="mb-3">
-															<label for="gpa" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="gpa" required>
-														</div>
-														<div class="mb-3">
-															<label for="gpa" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="gpa" required>
-														</div>
-														<div class="mb-3">
-															<label for="gpa" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="gpa" required>
-														</div>
-														<!-- Add more fields here as necessary -->
-														<button type="submit" class="btn btn-primary">Add</button>
-													</form>
-												</div>
-											</div>
-										</div>
-									</div></div>
-
-									<!-- Edit Student Modal -->
-									<div class="modal fade" id="editStudentModal" tabindex="-1"
-										aria-labelledby="editStudentModalLabel" aria-hidden="true">
-										<div class="modal-dialog">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h5 class="modal-title" id="editStudentModalLabel">Edit Student</h5>
-													<button type="button" class="btn-close" data-bs-dismiss="modal"
-														aria-label="Close"></button>
-												</div>
-												<div class="modal-body">
-													<form id="editStudentForm">
-														
-														<div class="mb-3">
-															<label for="editAge" class="form-label">Age</label>
-															<input type="number" class="form-control" id="editAge"
-																required>
-														</div>
-														<div class="mb-3">
-															<label for="editGender" class="form-label">Gender</label>
-															<input type="text" class="form-control" id="editGender"
-																required>
-														</div>
-														<div class="mb-3">
-															<label for="editGPA" class="form-label">GPA</label>
-															<input type="number" class="form-control" id="editGPA"
-																required>
-														</div>
-														<button type="submit" class="btn btn-warning">Save
-															Changes</button>
-													</form>
-												</div>
-											</div>
-										</div>
+		<div class="modal fade" id="addStudentForm" tabindex="-1" aria-labelledby="addStudentModalLabel"
+			aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="addStudentModalLabel">Thêm Sinh Viên Mới</h5>
+						<button type="button" class="btn" data-bs-dismiss="modal" aria-label="Đóng">
+							<i class="fa-solid fa-xmark fa-2xl" style="color: #d70f19;"></i>
+						</button>
+					</div>
+					<div class="modal-body">
+						<form action="{{ url_for('create_student') }}" method="POST" id="addStudentForm">
+							<!-- Tuổi và Giới tính -->
+							<div class="row">
+								<div class="col-md-6">
+									<div class="form-group">
+										<label for="age" class="form-label">Tuổi</label>
+										<input type="number" class="form-control" name="age" id="age" required min="18"
+											max="30">
 									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group">
+										<label for="days_absent" class="form-label">Số ngày vắng</label>
+										<input type="number" class="form-control" name="days_absent" id="days_absent"
+											required>
+									</div>
+								</div>
+							</div>
+
+							<!-- Tình hình kinh tế -->
+							<div class="row">
+								<div class="col-12">
+									<div class="form-group">
+										<label for="economic_status" class="form-label">Tình hình kinh tế</label>
+										<select class="form-control" name="economic_status" id="economic_status"
+											required>
+											<option value="">Chọn tình hình kinh tế</option>
+											<option value="Nghèo">Nghèo</option>
+											<option value="Cận nghèo">Cận nghèo</option>
+											<option value="Bình thường">Bình thường</option>
+											<option value="Giàu">Giàu</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<!-- GPA và Số tín chỉ -->
+							<div class="row">
+								<div class="col-md-6">
+									<div class="form-group">
+										<label for="gpa" class="form-label">GPA</label>
+										<input type="number" step="0.01" class="form-control" name="gpa" id="gpa"
+											required min="0" max="4">
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group">
+										<label for="credits_completed" class="form-label">Số tín chỉ</label>
+										<input type="number" class="form-control" name="credits_completed"
+											id="credits_completed" required>
+									</div>
+								</div>
+							</div>
+
+							<!-- Số ngày vắng và Làm thêm -->
+							<div class="row">
+								<div class="col-md-6">
+									<div class="form-group">
+										<label for="gender" class="form-label">Giới tính</label>
+										<select class="form-control" name="gender" id="gender" required>
+											<option value="">Chọn giới tính</option>
+											<option value="Nam">Nam</option>
+											<option value="Nữ">Nữ</option>
+											<option value="Khác">Khác</option>
+										</select>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="form-group">
+										<label for="part_time_job" class="form-label">Làm thêm</label>
+										<select class="form-control" name="part_time_job" id="part_time_job" required>
+											<option value="">Chọn</option>
+											<option value="Có">Có</option>
+											<option value="Không">Không</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<!-- Tình hình sức khỏe -->
+							<div class="row">
+								<div class="col-12">
+									<div class="form-group">
+										<label for="health_status" class="form-label">Tình hình sức khỏe</label>
+										<select class="form-control" name="health_status" id="health_status" required>
+											<option value="">Chọn</option>
+											<option value="Bình thường">Bình thường</option>
+											<option value="Bị bệnh">Bị bệnh</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<!-- Kết quả -->
+							<div class="row">
+								<div class="col-12">
+									<div class="form-group">
+										<label for="result" class="form-label">Kết quả</label>
+										<input type="number" class="form-control" name="result" id="result" required>
+									</div>
+								</div>
+							</div>
+
+							<!-- Nút Thêm -->
+							<div class="row">
+								<div class="col-auto">
+									<button type="submit" class="btn btn-primary">Thêm sinh viên</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+
 
 
 </body>
+
 
 </html>

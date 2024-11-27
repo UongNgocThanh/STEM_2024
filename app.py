@@ -1,17 +1,25 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 import sqlite3
-# from flask_login import login_required
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Đặt secret key để sử dụng flash messages
 
+# Kết nối cơ sở dữ liệu SQLite
 def get_db_connection():
-    conn = sqlite3.connect('student.db')  # Thay 'stem.db' thành tên cơ sở dữ liệu của bạn
+    conn = sqlite3.connect('student.db')  # Thay 'student.db' thành tên cơ sở dữ liệu của bạn
     conn.row_factory = sqlite3.Row
     return conn
 
+# Route để hiển thị danh sách học sinh
+@app.route("/")
+def list_students():
+    conn = get_db_connection()
+    students = conn.execute("SELECT * FROM students").fetchall()
+    conn.close()
+    return render_template('index.html', students=students)
+
 # Route để thêm học sinh
 @app.route("/students/create", methods=["POST"])
-# @login_required
 def create_student():
     if request.method == "POST":
         age = request.form["age"]
@@ -26,20 +34,24 @@ def create_student():
 
         conn = get_db_connection()
         conn.execute(
-            "INSERT INTO students ( age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            ( age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result),
+            "INSERT INTO students (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result),
         )
         conn.commit()
         conn.close()
 
-        flash("Student added successfully!")
-        return jsonify({"message": "Student added successfully!"})
+        flash("Student added successfully!",'success')
+        return redirect(url_for('list_students'))
 
 # Route để sửa thông tin học sinh
-@app.route("/students/update/<int:id>", methods=["POST"])
-# @login_required
-def update_student(id):
+@app.route("/students/edit/<int:id>", methods=["GET", "POST"])
+def edit_student(id):
+    conn = get_db_connection()
+    student = conn.execute("SELECT * FROM students WHERE student_id = ?", (id,)).fetchone()
+    conn.close()
+
     if request.method == "POST":
+        # Lấy dữ liệu từ form gửi lên
         age = request.form["age"]
         gender = request.form["gender"]
         economic_status = request.form["economic_status"]
@@ -50,37 +62,31 @@ def update_student(id):
         health_status = request.form["health_status"]
         result = request.form["result"]
 
+        # Cập nhật thông tin học sinh vào cơ sở dữ liệu
         conn = get_db_connection()
         conn.execute(
-            "UPDATE students SET  age = ?, gender = ?, economic_status = ?, gpa = ?, credits_completed = ?, days_absent = ?, part_time_job = ?, health_status = ?, result = ? WHERE student_id = ?",
-            ( age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result, id),
+            "UPDATE students SET age = ?, gender = ?, economic_status = ?, gpa = ?, credits_completed = ?, days_absent = ?, part_time_job = ?, health_status = ?, result = ? WHERE student_id = ?",
+            (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result, id),
         )
         conn.commit()
         conn.close()
 
-        flash("Student updated successfully!")
-        return jsonify({"message": "Student updated successfully!"})
+        flash('Student updated successfully!','success')
+        return redirect(url_for('list_students'))  # Redirect về danh sách học sinh
+
+    # Nếu là GET request, trả về form để sửa thông tin học sinh
+
 
 # Route để xóa học sinh
 @app.route("/students/delete/<int:id>", methods=["POST"])
-# @login_required
 def delete_student(id):
     conn = get_db_connection()
     conn.execute("DELETE FROM students WHERE student_id = ?", (id,))
     conn.commit()
     conn.close()
 
-    flash("Student deleted successfully!")
-    return jsonify({"message": "Student deleted successfully!"})
-
-# Route để hiển thị danh sách học sinh
-@app.route("/students")
-# @login_required
-def list_students():
-    conn = get_db_connection()
-    students = conn.execute("SELECT * FROM students").fetchall()
-    conn.close()
-    return render_template('index.html', students=students)
+    flash("Student deleted successfully!",'success')
+    return redirect(url_for('list_students'))
 
 if __name__ == '__main__':
     app.run(debug=True)
