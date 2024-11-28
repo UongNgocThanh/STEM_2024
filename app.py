@@ -44,7 +44,7 @@ def login():
             session['user_id'] = user['id']
             session['username'] = user['username']
             flash("Đăng nhập thành công!", "success")
-            return redirect(url_for('index'))
+            return redirect(url_for('list_students'))
         else:
             flash("Tên tài khoản hoặc mật khẩu không đúng.", "danger")
     return render_template("login.html")
@@ -103,6 +103,9 @@ def logout():
 @app.route("/students/create", methods=["POST"])
 # @login_required
 def create_student():
+    if 'user_id' not in session:
+        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        return redirect(url_for('login'))
     if request.method == "POST":
         age = request.form["age"]
         gender = request.form["gender"]
@@ -129,6 +132,9 @@ def create_student():
 @app.route("/students/update/<int:id>", methods=["POST"])
 # @login_required
 def update_student(id):
+    if 'user_id' not in session:
+        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        return redirect(url_for('login'))
     if request.method == "POST":
         age = request.form["age"]
         gender = request.form["gender"]
@@ -155,6 +161,9 @@ def update_student(id):
 @app.route("/students/delete/<int:id>", methods=["POST"])
 # @login_required
 def delete_student(id):
+    if 'user_id' not in session:
+        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        return redirect(url_for('login'))
     conn = get_db_connection()
     conn.execute("DELETE FROM students WHERE student_id = ?", (id,))
     conn.commit()
@@ -167,6 +176,9 @@ def delete_student(id):
 @app.route("/students")
 # @login_required
 def list_students():
+    if 'user_id' not in session:
+        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        return redirect(url_for('login'))
     conn = get_db_connection()
     students = conn.execute("SELECT * FROM students").fetchall()
     conn.close()
