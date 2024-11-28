@@ -1,29 +1,17 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
-# from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import re  # Import thư viện re để kiểm tra biểu thức chính quy
-# from flask_login import login_required
 
-app = Flask(__name__)
-app.secret_key = 'secret_key'
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
+login_register = Flask(__name__)
+login_register.secret_key = 'secret_key'  # Cần thay đổi thành một secret key bảo mật
 
-
-# Kết nối cơ sở dữ liệu SQLite
+# Kết nối cơ sở dữ liệu
 def get_db_connection():
-    conn = sqlite3.connect('student.db')  # Thay 'student.db' thành tên cơ sở dữ liệu của bạn
+    conn = sqlite3.connect('student.db')
     conn.row_factory = sqlite3.Row
     return conn
 
-# Route để hiển thị danh sách học sinh
-@app.route("/students")
-def list_students():
-    conn = get_db_connection()
-    students = conn.execute("SELECT * FROM students").fetchall()
-    conn.close()
-    return render_template('index.html', students=students)
 # Hàm kiểm tra tính hợp lệ của email
 def is_valid_email(email):
     # Biểu thức chính quy để kiểm tra định dạng email hợp lệ
@@ -34,7 +22,7 @@ def is_valid_email(email):
 def is_strong_password(password):
     return len(password) >= 8 and any(c.isdigit() for c in password) and any(c.isalpha() for c in password)
 
-@app.route('/login', methods=['GET', 'POST'])
+@login_register.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -57,7 +45,7 @@ def login():
             flash("Tên tài khoản hoặc mật khẩu không đúng.", "danger")
     return render_template("login.html")
 
-@app.route('/register', methods=['GET', 'POST'])
+@login_register.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         try: 
@@ -100,91 +88,21 @@ def register():
             flash("Lỗi khi đăng ký tài khoản.", "danger")
     return render_template("register.html")
 
-@app.route('/logout')
+@login_register.route('/logout')
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
     flash("Đăng xuất thành công!", "success")
     return redirect(url_for('index'))
 
-# Route để thêm học sinh
-@app.route("/students/create", methods=["POST"])
-def create_student():
-    if request.method == "POST":
-        age = request.form["age"]
-        gender = request.form["gender"]
-        economic_status = request.form["economic_status"]
-        gpa = request.form["gpa"]
-        credits_completed = request.form["credits_completed"]
-        days_absent = request.form["days_absent"]
-        part_time_job = request.form["part_time_job"]
-        health_status = request.form["health_status"]
-        result = request.form["result"]
-
-        conn = get_db_connection()
-        conn.execute(
-            "INSERT INTO students (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result),
-        )
-        conn.commit()
-        conn.close()
-
-        flash("Student added successfully!",'success')
-        return redirect(url_for('list_students'))
-
-# Route để sửa thông tin học sinh
-@app.route("/students/edit/<int:id>", methods=["GET", "POST"])
-def edit_student(id):
-    conn = get_db_connection()
-    student = conn.execute("SELECT * FROM students WHERE student_id = ?", (id,)).fetchone()
-    conn.close()
-
-    if request.method == "POST":
-        # Lấy dữ liệu từ form gửi lên
-        age = request.form["age"]
-        gender = request.form["gender"]
-        economic_status = request.form["economic_status"]
-        gpa = request.form["gpa"]
-        credits_completed = request.form["credits_completed"]
-        days_absent = request.form["days_absent"]
-        part_time_job = request.form["part_time_job"]
-        health_status = request.form["health_status"]
-        result = request.form["result"]
-
-        # Cập nhật thông tin học sinh vào cơ sở dữ liệu
-        conn = get_db_connection()
-        conn.execute(
-            "UPDATE students SET age = ?, gender = ?, economic_status = ?, gpa = ?, credits_completed = ?, days_absent = ?, part_time_job = ?, health_status = ?, result = ? WHERE student_id = ?",
-            (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result, id),
-        )
-        conn.commit()
-        conn.close()
-
-        flash('Student updated successfully!','success')
-        return redirect(url_for('list_students'))  # Redirect về danh sách học sinh
-
-    # Nếu là GET request, trả về form để sửa thông tin học sinh
-
-
-# Route để xóa học sinh
-@app.route("/students/delete/<int:id>", methods=["POST"])
-def delete_student(id):
-    conn = get_db_connection()
-    conn.execute("DELETE FROM students WHERE student_id = ?", (id,))
-    conn.commit()
-    conn.close()
-
-    flash("Student deleted successfully!",'success')
-    return redirect(url_for('list_students'))
-
-@app.route('/')
+@login_register.route('/')
 def index():
     if 'user_id' not in session:
         flash("Vui lòng đăng nhập để truy cập trang này", "danger")
         return redirect(url_for('login'))
     
     # Thực hiện các thao tác cần thiết để lấy dữ liệu cho dashboard nếu có
-    return redirect(url_for('list_students'))  # Thay 'index.html' bằng tên template của bạn
+    return render_template('index.html')  # Thay 'index.html' bằng tên template của bạn
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    login_register.run(debug=True)

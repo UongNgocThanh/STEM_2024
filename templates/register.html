@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-	<title>Dleohr - Bootstrap Admin HTML Template</title>
+	<title>Kanakku - Bootstrap Admin HTML Template</title>
 
 	<link rel="shortcut icon" href="static/assets/img/favicon.png">
 
@@ -15,8 +15,8 @@
 
 	<link rel="stylesheet" href="static/assets/css/style.css">
 	<!--[if lt IE 9]>
-			<script src="static/assets/js/html5shiv.min.js"></script>
-			<script src="static/assets/js/respond.min.js"></script>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
 		<![endif]-->
 </head>
 
@@ -29,48 +29,44 @@
 				<div class="loginbox">
 					<div class="login-right">
 						<div class="login-right-wrap">
-							<h1>Login</h1>
+							<h1>Register</h1>
 							<p class="account-subtitle">Access to our dashboard</p>
-							<form action="{{ url_for('login') }}" method="POST">
+
+							<form action="{{ url_for('register') }}" method="POST">
+								<div class="form-group">
+									<label class="form-control-label">Name</label>
+									<input class="form-control" type="text" name="name" required>
+								</div>
 								<div class="form-group">
 									<label class="form-control-label">Email Address</label>
-									<input type="email" name="username" class="form-control" required>
+									<input class="form-control" type="email" name="username" required>
 								</div>
 								<div class="form-group">
 									<label class="form-control-label">Password</label>
-									<div class="pass-group">
-										<input type="password" name="password" class="form-control pass-input" required>
-										<span class="fas fa-eye toggle-password"></span>
-									</div>
+									<input class="form-control" type="password" name="password" required>
 								</div>
 								<div class="form-group">
-									<div class="row">
-										<div class="col-6">
-											<div class="custom-control custom-checkbox">
-												<input type="checkbox" class="custom-control-input" id="cb1">
-												<label class="custom-control-label" for="cb1">Remember me</label>
-											</div>
-										</div>
-										<div class="col-6 text-right">
-											<a class="forgot-link" href="forgot-password.html">Forgot Password ?</a>
-										</div>
-									</div>
+									<label class="form-control-label">Confirm Password</label>
+									<input class="form-control" type="password" name="confirm_password" required>
 								</div>
-								<button class="btn btn-lg btn-block btn-primary" type="submit">Login</button>
-								<div class="login-or">
-									<span class="or-line"></span>
-									<span class="span-or">or</span>
+								<div class="form-group mb-0">
+									<button class="btn btn-lg btn-block btn-primary" type="submit">Register</button>
 								</div>
-
-								<div class="social-login mb-3">
-									<span>Login with</span>
-									<a href="#" class="facebook"><i class="fab fa-facebook-f"></i></a><a href="#"
-										class="google"><i class="fab fa-google"></i></a>
-								</div>
-
-								<div class="text-center dont-have">Don't have an account yet? <a
-										href="{{ url_for('register') }}">Register</a></div>
 							</form>
+
+							<div class="login-or">
+								<span class="or-line"></span>
+								<span class="span-or">or</span>
+							</div>
+
+							<div class="social-login">
+								<span>Register with</span>
+								<a href="#" class="facebook"><i class="fab fa-facebook-f"></i></a><a href="#"
+									class="google"><i class="fab fa-google"></i></a>
+							</div>
+
+							<div class="text-center dont-have">Already have an account? <a href="{{ url_for('login') }}">Login</a>
+							</div>
 						</div>
 					</div>
 				</div>
