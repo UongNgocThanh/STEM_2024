@@ -11,11 +11,22 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 
 
+# Kết nối cơ sở dữ liệu SQLite
 def get_db_connection():
-    conn = sqlite3.connect('student.db')  # Thay 'stem.db' thành tên cơ sở dữ liệu của bạn
+    conn = sqlite3.connect('student.db')  # Thay 'student.db' thành tên cơ sở dữ liệu của bạn
     conn.row_factory = sqlite3.Row
     return conn
 
+# Route để hiển thị danh sách học sinh
+@app.route("/students")
+def list_students():
+    if 'user_id' not in session:
+        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        return redirect(url_for('login'))
+    conn = get_db_connection()
+    students = conn.execute("SELECT * FROM students").fetchall()
+    conn.close()
+    return render_template('index.html', students=students)
 # Hàm kiểm tra tính hợp lệ của email
 def is_valid_email(email):
     # Biểu thức chính quy để kiểm tra định dạng email hợp lệ
@@ -89,7 +100,6 @@ def register():
         except Exception as e:
             # Xử lý lỗi, ghi log và thông báo cho người dùng
             print(f"Đã xảy ra lỗi: {e}")
-            flash("Lỗi khi đăng ký tài khoản.", "danger")
     return render_template("register.html")
 
 @app.route('/logout')
@@ -101,7 +111,6 @@ def logout():
 
 # Route để thêm học sinh
 @app.route("/students/create", methods=["POST"])
-# @login_required
 def create_student():
     if 'user_id' not in session:
         flash("Vui lòng đăng nhập để truy cập trang này", "danger")
@@ -119,23 +128,27 @@ def create_student():
 
         conn = get_db_connection()
         conn.execute(
-            "INSERT INTO students ( age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            ( age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result),
+            "INSERT INTO students (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result),
         )
         conn.commit()
         conn.close()
 
-        flash("Student added successfully!")
-        return jsonify({"message": "Student added successfully!"})
+        flash("Student added successfully!",'success')
+        return redirect(url_for('list_students'))
 
 # Route để sửa thông tin học sinh
-@app.route("/students/update/<int:id>", methods=["POST"])
-# @login_required
-def update_student(id):
+
+@app.route("/students/edit/<int:id>", methods=["GET", "POST"])
+def edit_student(id):
     if 'user_id' not in session:
         flash("Vui lòng đăng nhập để truy cập trang này", "danger")
         return redirect(url_for('login'))
+    conn = get_db_connection()
+    student = conn.execute("SELECT * FROM students WHERE student_id = ?", (id,)).fetchone()
+    conn.close()
     if request.method == "POST":
+        # Lấy dữ liệu từ form gửi lên
         age = request.form["age"]
         gender = request.form["gender"]
         economic_status = request.form["economic_status"]
@@ -146,20 +159,23 @@ def update_student(id):
         health_status = request.form["health_status"]
         result = request.form["result"]
 
+        # Cập nhật thông tin học sinh vào cơ sở dữ liệu
         conn = get_db_connection()
         conn.execute(
-            "UPDATE students SET  age = ?, gender = ?, economic_status = ?, gpa = ?, credits_completed = ?, days_absent = ?, part_time_job = ?, health_status = ?, result = ? WHERE student_id = ?",
-            ( age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result, id),
+            "UPDATE students SET age = ?, gender = ?, economic_status = ?, gpa = ?, credits_completed = ?, days_absent = ?, part_time_job = ?, health_status = ?, result = ? WHERE student_id = ?",
+            (age, gender, economic_status, gpa, credits_completed, days_absent, part_time_job, health_status, result, id),
         )
         conn.commit()
         conn.close()
 
-        flash("Student updated successfully!")
-        return jsonify({"message": "Student updated successfully!"})
+        flash('Student updated successfully!','success')
+        return redirect(url_for('list_students'))  # Redirect về danh sách học sinh
+
+    # Nếu là GET request, trả về form để sửa thông tin học sinh
+
 
 # Route để xóa học sinh
 @app.route("/students/delete/<int:id>", methods=["POST"])
-# @login_required
 def delete_student(id):
     if 'user_id' not in session:
         flash("Vui lòng đăng nhập để truy cập trang này", "danger")
@@ -168,21 +184,9 @@ def delete_student(id):
     conn.execute("DELETE FROM students WHERE student_id = ?", (id,))
     conn.commit()
     conn.close()
-
+    
     flash("Student deleted successfully!")
     return jsonify({"message": "Student deleted successfully!"})
-
-# Route để hiển thị danh sách học sinh
-@app.route("/students")
-# @login_required
-def list_students():
-    if 'user_id' not in session:
-        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
-        return redirect(url_for('login'))
-    conn = get_db_connection()
-    students = conn.execute("SELECT * FROM students").fetchall()
-    conn.close()
-    return render_template('index.html', students=students)
 
 @app.route('/')
 def index():
@@ -191,7 +195,7 @@ def index():
         return redirect(url_for('login'))
     
     # Thực hiện các thao tác cần thiết để lấy dữ liệu cho dashboard nếu có
-    return render_template('index.html')  # Thay 'index.html' bằng tên template của bạn
+    return redirect(url_for('list_students'))  # Thay 'index.html' bằng tên template của bạn
 
 if __name__ == '__main__':
     app.run(debug=True)
