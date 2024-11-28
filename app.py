@@ -1,5 +1,7 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, session
 import sqlite3
+from datetime import datetime
+
 # from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import re  # Import thư viện re để kiểm tra biểu thức chính quy
@@ -22,8 +24,21 @@ def get_db_connection():
 def list_students():
     conn = get_db_connection()
     students = conn.execute("SELECT * FROM students").fetchall()
+    total_students = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
+    total_failed_students = conn.execute("SELECT COUNT(*) FROM students WHERE result = 'Rớt Môn'").fetchone()[0]
+    partTime_students = conn.execute("SELECT COUNT(*) FROM students WHERE part_time_job = 'Có'").fetchone()[0]
+    total_heathless_students = conn.execute("SELECT COUNT(*) FROM students WHERE health_status = 'Bị Bệnh'").fetchone()[0]
+    current_datetime = datetime.now().strftime('%a, %d %b %Y')  # Format: Sun, 29 Nov 2019
+
+
     conn.close()
-    return render_template('index.html', students=students)
+    return render_template('index.html',
+                            students=students,
+                            total_students=total_students,
+                            total_failed_students=total_failed_students,
+                            current_datetime=current_datetime,
+                            partTime_students=partTime_students,
+                            total_heathless_students=total_heathless_students)
 # Hàm kiểm tra tính hợp lệ của email
 def is_valid_email(email):
     # Biểu thức chính quy để kiểm tra định dạng email hợp lệ

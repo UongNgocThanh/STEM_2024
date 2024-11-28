@@ -41,9 +41,9 @@
 		<div class="page-wrapper">
 			<div class="content container-fluid">
 				<div class="page-name 	mb-4">
-					<h4 class="m-0"><img src="static/assets/img/profile.jpg" class="mr-1" alt="profile" /> Welcome Admin
+					<h4 class="m-0"><img src="static/assets/img/avt.jpg" class="mr-1" alt="profile" /> Welcome Admin
 					</h4>
-					<label>Sun, 29 Nov 2019</label>
+					<label>{{ current_datetime }}</label>
 				</div>
 				<div class="row mb-4">
 					<div class="col-xl-6 col-sm-12 col-12">
@@ -63,7 +63,7 @@
 								<a class="btn-dash" href="#"> Admin Dashboard</a>
 							</div>
 							<div class="col-xl-6 col-sm-6 col-12">
-								<a class="btn-emp" href="#"> Employees Dashboard</a>
+								<a class="btn-emp" href="#"> Student Dashboard</a>
 							</div>
 
 
@@ -76,8 +76,8 @@
 						<div class="card board1 fill1 ">
 							<div class="card-body">
 								<div class="card_widget_header">
-									<label>Employees</label>
-									<h4>700</h4>
+									<label>Tổng Số Sinh Viên</label>
+									<h4>{{ total_students }}</h4>
 								</div>
 								<div class="card_widget_img">
 									<img src="static/assets/img/dash1.png" alt="card-img" />
@@ -89,8 +89,8 @@
 						<div class="card board1 fill2 ">
 							<div class="card-body">
 								<div class="card_widget_header">
-									<label>Companies</label>
-									<h4>30</h4>
+									<label>Tổng SV Bị Bệnh</label>
+									<h4>{{ total_heathless_students }}</h4>
 								</div>
 								<div class="card_widget_img">
 									<img src="static/assets/img/dash2.png" alt="card-img" />
@@ -102,8 +102,8 @@
 						<div class="card board1 fill3 ">
 							<div class="card-body">
 								<div class="card_widget_header">
-									<label>Leaves</label>
-									<h4>9</h4>
+									<label>Sinh Viên Rớt</label>
+									<h4>{{ total_failed_students }}</h4>
 								</div>
 								<div class="card_widget_img">
 									<img src="static/assets/img/dash3.png" alt="card-img" />
@@ -115,8 +115,8 @@
 						<div class="card board1 fill4 ">
 							<div class="card-body">
 								<div class="card_widget_header">
-									<label>Salary</label>
-									<h4>$5.8M</h4>
+									<label>Số SV Làm Thêm</label>
+									<h4>{{ partTime_students }}</h4>
 								</div>
 								<div class="card_widget_img">
 									<img src="static/assets/img/dash4.png" alt="card-img" />
@@ -130,7 +130,7 @@
 						<div class="card flex-fill">
 							<div class="card-header">
 								<div class="d-flex justify-content-between align-items-center">
-									<h5 class="card-title">Total Employees</h5>
+									<h5 class="card-title">Total Students</h5>
 								</div>
 							</div>
 							<div class="card-body">
@@ -180,11 +180,10 @@
 						<ul>
 							<li><a class="active" href="#">All</a></li>
 							<li><a href="#">Teams</a></li>
-							<li><a href="employee-office.html">Offices</a></li>
+							<li><a href="#">Offices</a></li>
 						</ul>
 
-						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm"><i
-								class="fa-solid fa-plus"></i>Add Person</a>
+						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm">Add Person</a>
 					</div>
 				</div>
 
@@ -210,13 +209,13 @@
 				<div class="col-xl-12 col-sm-12 col-12 mb-4">
 					<div class="card">
 						<div class="table-heading">
-							<h2>Project Summery</h2>
+							<h2>Danh Sách Sinh Viên</h2>
 						</div>
 						<div class="table-responsive">
 							<table class="table  custom-table no-footer">
 								<thead>
 									<tr>
-										<th>Mã sinh viên</th>
+										<th>ID</th>
 										<th>Tuổi</th>
 										<th>Giới tính</th>
 										<th>Tình hình kinh tế</th>
@@ -239,12 +238,12 @@
 										<td>{{ student['age'] }}</td>
 										<td>{{ student['gender'] }}</td>
 										<td>{{ student['economic_status'] }}</td>
-										<td>{{ student['gpa'] }}</td>
+										<td><label class="action_label">{{ student['gpa'] }}</label></td>
 										<td>{{ student['credits_completed'] }}</td>
-										<td>{{ student['days_absent'] }}</td>
+										<td><label class="action_label">{{ student['days_absent'] }}</label></td>
 										<td>{{ student['part_time_job'] }}</td>
 										<td>{{ student['health_status'] }}</td>
-										<td>{{student['result']}}
+										<td> <label class="action_label2"> {{student['result']}}</label>
 										</span>
 										</td>
 										<td>
@@ -427,8 +426,8 @@
 																		%}selected{% endif %}>Chọn kết quả</option>
 																	<option value="Rớt Môn" {% if student['result']=='Rớt Môn'
 																		%}selected{% endif %}>Rớt Môn</option>
-																	<option value="Đạt" {% if student['result']=='Đạt'
-																		%}selected{% endif %}>Đạt</option>
+																	<option value="Qua Môn" {% if student['result']=='Qua Môn'
+																		%}selected{% endif %}>Qua Môn</option>
 																</select>
 															</div>
 
@@ -579,7 +578,7 @@
 										<select class="form-control" name="result" id="result" required>
 											<option value="">Chọn</option>
 											<option value="Rớt Môn">Rớt Môn</option>
-											<option value="Đạt">Đạt</option>
+											<option value="Qua Môn">Qua Môn</option>
 										</select>
 									</div>
 								</div>
