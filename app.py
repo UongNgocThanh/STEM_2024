@@ -22,6 +22,9 @@ def get_db_connection():
 # Route để hiển thị danh sách học sinh
 @app.route("/students")
 def list_students():
+    if 'user_id' not in session:
+        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        return redirect(url_for('login'))
     conn = get_db_connection()
     students = conn.execute("SELECT * FROM students").fetchall()
     total_students = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
@@ -52,68 +55,95 @@ def is_strong_password(password):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        errors = []
 
-        # Kiểm tra tên người dùng (email) và mật khẩu có được nhập đúng chưa
-        if not username or not password:
-            flash("Tên tài khoản và mật khẩu không được để trống.", "danger")
+        # Kiểm tra các trường nhập vào
+        if not username:
+            errors.append("Tên tài khoản không được để trống.")
+        if not password:
+            errors.append("Mật khẩu không được để trống.")
+        
+        # Nếu có lỗi, hiển thị thông báo và dừng
+        if errors:
+            for error in errors:
+                flash(error, "danger")
+            return render_template("login.html")
 
-        conn = get_db_connection()
-        user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-        conn.close()
+        try:
+            conn = get_db_connection()
+            user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+            conn.close()
 
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            flash("Đăng nhập thành công!", "success")
-            return redirect(url_for('index'))
-        else:
-            flash("Tên tài khoản hoặc mật khẩu không đúng.", "danger")
+            # Kiểm tra thông tin đăng nhập
+            if user and check_password_hash(user['password'], password):
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                return redirect(url_for('index'))
+            else:
+                flash("Tên tài khoản hoặc mật khẩu không đúng.", "danger")
+        except sqlite3.Error as e:
+            print(f"Lỗi SQLite: {e}")
+            flash("Đã xảy ra lỗi khi kết nối cơ sở dữ liệu. Vui lòng thử lại.", "danger")
+
     return render_template("login.html")
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        try: 
-            name = request.form['name']
-            username = request.form['username']
-            password = request.form['password']
-            confirm_password = request.form['confirm_password']
+        name = request.form.get('name', '').strip()
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        
+        errors = []
 
-            # Kiểm tra tính hợp lệ của email
-            if not is_valid_email(username):
-                flash("Tên tài khoản phải là một email hợp lệ.", "danger")
+        # Kiểm tra các điều kiện hợp lệ
+        if not name:
+            errors.append("Họ và tên không được để trống.")
+        
+        if not username:
+            errors.append("Tên tài khoản (email) không được để trống.")
+        elif not is_valid_email(username):
+            errors.append("Tên tài khoản phải là một email hợp lệ.")
+        
+        if not password or not confirm_password:
+            errors.append("Mật khẩu và xác nhận mật khẩu không được để trống.")
+        elif password != confirm_password:
+            errors.append("Mật khẩu không khớp.")
+        elif not is_strong_password(password):
+            errors.append("Mật khẩu phải dài ít nhất 8 ký tự và chứa cả chữ cái và số.")
+        
+        # Dừng lại nếu có lỗi
+        if errors:
+            for error in errors:
+                flash(error, "danger")
+            return render_template("register.html")
+        
+        # Kiểm tra xem tài khoản đã tồn tại chưa
+        try:
+            conn = get_db_connection()
+            existing_user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+            if existing_user:
+                flash("Tên tài khoản đã tồn tại.", "danger")
+                return render_template("register.html")
 
-            # Validate mật khẩu không khớp
-            if password != confirm_password:
-                flash("Mật khẩu không khớp.", "danger")
-
-            # Kiểm tra độ mạnh mật khẩu
-            if not is_strong_password(password):
-                flash("Mật khẩu phải dài ít nhất 8 ký tự và chứa cả chữ cái và số.", "danger")
-
+            # Tạo tài khoản mới nếu hợp lệ
             hashed_password = generate_password_hash(password)
+            conn.execute("INSERT INTO users (name, username, password) VALUES (?, ?, ?)", (name, username, hashed_password))
+            conn.commit()
+            conn.close()
 
-            try:
-                conn = get_db_connection()
-                # Kiểm tra xem tên người dùng (email) có tồn tại trong cơ sở dữ liệu chưa
-                existing_user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-                if existing_user:
-                    flash("Tên tài khoản đã tồn tại.", "danger")
-
-                conn.execute("INSERT INTO users (name, username, password) VALUES (?, ?, ?)", (name, username, hashed_password))
-                conn.commit()
-                conn.close()
-                flash("Đăng ký thành công! Hãy đăng nhập.", "success")
-                return redirect(url_for('login'))
-            except sqlite3.IntegrityError:
-                flash("Lỗi khi đăng ký tài khoản.", "danger")
-        except Exception as e:
-            # Xử lý lỗi, ghi log và thông báo cho người dùng
-            print(f"Đã xảy ra lỗi: {e}")
-            flash("Lỗi khi đăng ký tài khoản.", "danger")
+            flash("Đăng ký thành công! Hãy đăng nhập.", "success")
+            return redirect(url_for('login'))
+        except sqlite3.Error as e:
+            print(f"Lỗi SQLite: {e}")
+            flash("Đã xảy ra lỗi khi kết nối cơ sở dữ liệu. Vui lòng thử lại.", "danger")
+    
     return render_template("register.html")
+
 
 @app.route('/logout')
 def logout():
