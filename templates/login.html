@@ -47,15 +47,15 @@
 				<div class="loginbox">
 					<div class="login-right">
 						<div class="login-right-wrap">
-							<h1>Login</h1>
-							<p class="account-subtitle">Access to our dashboard</p>
+							<h1>Đăng nhập</h1>
+							<p class="account-subtitle">Truy cập vào bảng điều khiển</p>
 							<form action="{{ url_for('login') }}" method="POST">
 								<div class="form-group">
-									<label class="form-control-label">Email Address</label>
+									<label class="form-control-label">Địa chỉ Email</label>
 									<input type="email" name="username" class="form-control" required>
 								</div>
 								<div class="form-group">
-									<label class="form-control-label">Password</label>
+									<label class="form-control-label">Mật khẩu</label>
 									<div class="pass-group">
 										<input type="password" name="password" class="form-control pass-input" required>
 										<span class="fas fa-eye toggle-password"></span>
@@ -66,28 +66,28 @@
 										<div class="col-6">
 											<div class="custom-control custom-checkbox">
 												<input type="checkbox" class="custom-control-input" id="cb1">
-												<label class="custom-control-label" for="cb1">Remember me</label>
+												<label class="custom-control-label" for="cb1">Lưu thông tin</label>
 											</div>
 										</div>
 										<div class="col-6 text-right">
-											<a class="forgot-link" href="forgot-password.html">Forgot Password ?</a>
+											<a class="forgot-link" href="forgot-password.html">Quên mật khẩu?</a>
 										</div>
 									</div>
 								</div>
-								<button class="btn btn-lg btn-block btn-primary" type="submit">Login</button>
+								<button class="btn btn-lg btn-block btn-primary" type="submit">Đăng nhập</button>
 								<div class="login-or">
 									<span class="or-line"></span>
 									<span class="span-or">or</span>
 								</div>
 
 								<div class="social-login mb-3">
-									<span>Login with</span>
+									<span>Đăng nhập với</span>
 									<a href="#" class="facebook"><i class="fab fa-facebook-f"></i></a><a href="#"
 										class="google"><i class="fab fa-google"></i></a>
 								</div>
 
-								<div class="text-center dont-have">Don't have an account yet? <a
-										href="{{ url_for('register') }}">Register</a></div>
+								<div class="text-center dont-have">Bạn chưa có tài khoản? <a
+										href="{{ url_for('register') }}">Đăng kí tài khoản</a></div>
 							</form>
 						</div>
 					</div>

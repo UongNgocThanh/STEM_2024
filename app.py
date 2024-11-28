@@ -23,7 +23,7 @@ def get_db_connection():
 @app.route("/students")
 def list_students():
     if 'user_id' not in session:
-        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        # flash("Vui lòng đăng nhập để truy cập trang này", "danger")
         return redirect(url_for('login'))
     conn = get_db_connection()
     students = conn.execute("SELECT * FROM students").fetchall()
@@ -32,7 +32,8 @@ def list_students():
     partTime_students = conn.execute("SELECT COUNT(*) FROM students WHERE part_time_job = 'Có'").fetchone()[0]
     total_heathless_students = conn.execute("SELECT COUNT(*) FROM students WHERE health_status = 'Bị Bệnh'").fetchone()[0]
     current_datetime = datetime.now().strftime('%a, %d %b %Y')  # Format: Sun, 29 Nov 2019
-
+    name = session['name']
+    username = session['username']
 
     conn.close()
     return render_template('index.html',
@@ -41,7 +42,7 @@ def list_students():
                             total_failed_students=total_failed_students,
                             current_datetime=current_datetime,
                             partTime_students=partTime_students,
-                            total_heathless_students=total_heathless_students)
+                            total_heathless_students=total_heathless_students, name = name, username=username)
 # Hàm kiểm tra tính hợp lệ của email
 def is_valid_email(email):
     # Biểu thức chính quy để kiểm tra định dạng email hợp lệ
@@ -72,22 +73,25 @@ def login():
             return render_template("login.html")
 
         try:
-            conn = get_db_connection()
-            user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-            conn.close()
+            # Sử dụng `with` để đảm bảo đóng kết nối
+            with get_db_connection() as conn:
+                user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
 
             # Kiểm tra thông tin đăng nhập
             if user and check_password_hash(user['password'], password):
                 session['user_id'] = user['id']
+                session['name'] = user['name']
                 session['username'] = user['username']
+                # flash("Đăng nhập thành công!", "success")
                 return redirect(url_for('index'))
             else:
-                flash("Tên tài khoản hoặc mật khẩu không đúng.", "danger")
+                flash("Tài khoản hoặc mật khẩu không đúng!", "danger")
         except sqlite3.Error as e:
             print(f"Lỗi SQLite: {e}")
             flash("Đã xảy ra lỗi khi kết nối cơ sở dữ liệu. Vui lòng thử lại.", "danger")
 
     return render_template("login.html")
+
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -149,7 +153,8 @@ def register():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
-    flash("Đăng xuất thành công!", "success")
+    session.pop('name', None)
+    # flash("Đăng xuất thành công!", "success")
     return redirect(url_for('index'))
 
 # Route để thêm học sinh
@@ -174,7 +179,7 @@ def create_student():
         conn.commit()
         conn.close()
 
-        flash("Student added successfully!",'success')
+        flash("Thêm sinh viên thành công!",'success')
         return redirect(url_for('list_students'))
 
 # Route để sửa thông tin học sinh
@@ -205,7 +210,7 @@ def edit_student(id):
         conn.commit()
         conn.close()
 
-        flash('Student updated successfully!','success')
+        flash('Đã cập nhật thành công thông tin sinh viên!','success')
         return redirect(url_for('list_students'))  # Redirect về danh sách học sinh
 
     # Nếu là GET request, trả về form để sửa thông tin học sinh
@@ -219,13 +224,13 @@ def delete_student(id):
     conn.commit()
     conn.close()
 
-    flash("Student deleted successfully!",'success')
+    flash("Đã xóa thành công sinh viên!",'success')
     return redirect(url_for('list_students'))
 
 @app.route('/')
 def index():
     if 'user_id' not in session:
-        flash("Vui lòng đăng nhập để truy cập trang này", "danger")
+        # flash("Vui lòng đăng nhập để truy cập trang này", "danger")
         return redirect(url_for('login'))
     
     # Thực hiện các thao tác cần thiết để lấy dữ liệu cho dashboard nếu có
