@@ -41,7 +41,7 @@
 		<div class="page-wrapper">
 			<div class="content container-fluid">
 				<div class="page-name 	mb-4">
-					<h4 class="m-0"><img src="static/assets/img/avt.jpg" class="mr-1" alt="profile" /> Chào {{name}}!
+					<h4 class="m-0"><img src="static/assets/img/avt.jpg" class="mr-1" alt="profile" /> Welcome Admin
 					</h4>
 					<label>{{ current_datetime }}</label>
 				</div>
@@ -49,7 +49,7 @@
 					<div class="col-xl-6 col-sm-12 col-12">
 						<div class="breadcrumb-path ">
 							<ul class="breadcrumb">
-								<li class="breadcrumb-item"><a href="{{ url_for('index')}}"><img src="static/assets/img/dash.png"
+								<li class="breadcrumb-item"><a href="index.html"><img src="static/assets/img/dash.png"
 											class="mr-3" alt="breadcrumb" />Home</a>
 								</li>
 								<li class="breadcrumb-item active">Dashboard</li>
@@ -178,10 +178,12 @@
 				<div class="col-xl-12 col-sm-12 col-12 mb-4">
 					<div class="head-link-set">
 						<ul>
-							<li><a class="active" href="#">Danh sách sinh viên</a></li>
+							<li><a class="active" href="#">All</a></li>
+							<li><a href="#">Teams</a></li>
+							<li><a href="#">Offices</a></li>
 						</ul>
 
-						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm">Thêm sinh viên</a>
+						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm">Add Person</a>
 					</div>
 				</div>
 
@@ -206,6 +208,9 @@
 				</div>
 				<div class="col-xl-12 col-sm-12 col-12 mb-4">
 					<div class="card">
+						<div class="table-heading">
+							<h2>Danh Sách Sinh Viên</h2>
+						</div>
 						<div class="table-responsive">
 							<table class="table  custom-table no-footer">
 								<thead>
@@ -225,8 +230,9 @@
 									</tr>
 								</thead>
 								<tbody>
-
 									{% for student in students %}
+
+
 									<tr>
 										<td>{{ student['student_id'] }}</td>
 										<td>{{ student['age'] }}</td>
@@ -238,12 +244,12 @@
 										<td>{{ student['part_time_job'] }}</td>
 										<td>{{ student['health_status'] }}</td>
 										<td> <label class="action_label2"> {{student['result']}}</label>
-										</span>
+											</span>
 										</td>
 										<td>
 											<!-- Edit button -->
 											<button class="btn btn-warning" data-bs-toggle="modal"
-												data-bs-target="#editStudentModal"><i
+												data-bs-target="#editStudentModal{{ student['student_id'] }}"><i
 													class="fa-solid fa-pen-to-square"></i></button>
 
 											<!-- Delete button -->
@@ -256,182 +262,163 @@
 										</td>
 									</tr>
 									<!-- Edit Modal -->
-									<div class="customize_popup">
-										<div class="modal fade" id="editStudentModal" tabindex="-1"
-											aria-labelledby="editStudentModalLabel{{ student['student_id'] }}"
-											aria-hidden="true">
-											<div class="modal-dialog">
-												<div class="modal-content">
-													<div class="modal-header">
-														<h5 class="modal-title"
-															id="editStudentModalLabel{{ student['student_id'] }}">Chỉnh
-															sửa thông tin sinh viên</h5>
-														<button type="button" class="btn" data-bs-dismiss="modal"
-															aria-label="Đóng">
-															<i class="fa-solid fa-xmark fa-2xl"
-																style="color: #d70f19;"></i>
-														</button>
-													</div>
-													<div class="modal-body">
-														<form
-															action="{{ url_for('edit_student', id=student['student_id']) }}"
-															method="POST">
-															<!-- Tuổi -->
-															<div class="row">
-																<div class="col-md-6">
-																	<div class="form-group">
-																		<label for="age" class="form-label">Tuổi</label>
-																		<input type="number" class="form-control"
-																			name="age" id="age"
-																			value="{{ student['age'] }}" required>
-																	</div>
-																</div>
-																<div class="col-md-6">
-																	<div class="form-group">
-																		<label for="age" class="form-label">Số Ngày
-																			Vắng</label>
-																		<input type="number" class="form-control"
-																			name="days_absent" id="days_absent"
-																			value="{{ student['days_absent'] }}"
-																			required>
-																	</div>
-																</div>
+									<div class="modal fade" id="editStudentModal{{ student['student_id'] }}"
+										tabindex="-1" aria-labelledby="editStudentModalLabel{{ student['student_id'] }}"
+										aria-hidden="true">
+										<div class="modal-dialog">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title"
+														id="editStudentModalLabel{{ student['student_id'] }}">
+														Chỉnh sửa thông tin sinh viên
+													</h5>
+													<button type="button" class="btn" data-bs-dismiss="modal" aria-label="Đóng">
+														<i class="fa-solid fa-xmark fa-2xl" style="color: #d70f19;"></i>
+													</button>
+												</div>
+												<div class="modal-body">
+													<form
+														action="{{ url_for('edit_student', id=student['student_id']) }}"
+														method="POST">
+														<!-- Tuổi -->
+														<div class="form-group">
+															<label for="age{{ student['student_id'] }}"
+																class="form-label">Tuổi</label>
+															<input type="number" class="form-control"
+																id="age{{ student['student_id'] }}" name="age"
+																value="{{ student['age'] }}" required>
+														</div>
 
-															</div>
+														<!-- Số ngày vắng -->
+														<div class="form-group">
+															<label for="days_absent{{ student['student_id'] }}"
+																class="form-label">Số ngày vắng</label>
+															<input type="number" class="form-control"
+																id="days_absent{{ student['student_id'] }}"
+																name="days_absent" value="{{ student['days_absent'] }}"
+																required>
+														</div>
 
+														<!-- Giới tính -->
+														<div class="form-group">
+															<label for="gender{{ student['student_id'] }}"
+																class="form-label">Giới tính</label>
+															<select class="form-control"
+																id="gender{{ student['student_id'] }}" name="gender"
+																required>
+																<option value="" {% if not student['gender']
+																	%}selected{% endif %}>Chọn giới tính</option>
+																<option value="Nam" {% if student['gender']=='Nam'
+																	%}selected{% endif %}>Nam</option>
+																<option value="Nữ" {% if student['gender']=='Nữ'
+																	%}selected{% endif %}>Nữ</option>
+																<option value="Khác" {% if student['gender']=='Khác'
+																	%}selected{% endif %}>Khác</option>
+															</select>
+														</div>
 
-															<!-- Giới tính -->
-															<div class="row">
-																<div class="col-md-6">
-																	<div class="form-group">
-																		<label for="gender" class="form-label">Giới
-																			tính</label>
-																		<select class="form-control" name="gender"
-																			id="gender" required>
-																			<option value="" {% if not student['gender']
-																				%}selected{% endif %}>Chọn giới tính
-																			</option>
-																			<option value="Nam" {% if
-																				student['gender']=='Nam' %}selected{%
-																				endif %}>Nam</option>
-																			<option value="Nữ" {% if
-																				student['gender']=='Nữ' %}selected{%
-																				endif %}>Nữ</option>
-																			<option value="Khác" {% if
-																				student['gender']=='Khác' %}selected{%
-																				endif %}>Khác</option>
-																		</select>
-																	</div>
-																</div>
-																<div class="col-md-6">
-																	<div class="form-group">
-																		<label for="economic_status"
-																			class="form-label">Tình trạng kinh
-																			tế</label>
-																		<select class="form-control"
-																			name="economic_status" id="economic_status"
-																			required>
-																			<option value="" {% if not
-																				student['economic_status'] %}selected{%
-																				endif %}>Chọn tình trạng</option>
-																			<option value="Nghèo" {% if
-																				student['economic_status']=='Nghèo'
-																				%}selected{% endif %}>Nghèo</option>
-																			<option value="Cận Nghèo" {% if
-																				student['economic_status']=='Cận Nghèo'
-																				%}selected{% endif %}>Cận Nghèo</option>
-																			<option value="Giàu" {% if
-																				student['economic_status']=='Giàu'
-																				%}selected{% endif %}>Giàu</option>
-																			<option value="Bình Thường" {% if
-																				student['economic_status']=='Bình Thường'
-																				%}selected{% endif %}>Bình Thường
-																			</option>
+														<!-- Tình trạng kinh tế -->
+														<div class="form-group">
+															<label for="economic_status{{ student['student_id'] }}"
+																class="form-label">Tình trạng kinh tế</label>
+															<select class="form-control"
+																id="economic_status{{ student['student_id'] }}"
+																name="economic_status" required>
+																<option value="" {% if not student['economic_status']
+																	%}selected{% endif %}>Chọn tình trạng</option>
+																<option value="Nghèo" {% if
+																	student['economic_status']=='Nghèo' %}selected{%
+																	endif %}>Nghèo</option>
+																<option value="Cận Nghèo" {% if
+																	student['economic_status']=='Cận Nghèo' %}selected{%
+																	endif %}>Cận Nghèo</option>
+																<option value="Bình Thường" {% if
+																	student['economic_status']=='Bình Thường'
+																	%}selected{% endif %}>Bình Thường</option>
+																<option value="Giàu" {% if
+																	student['economic_status']=='Giàu' %}selected{%
+																	endif %}>Giàu</option>
+															</select>
+														</div>
 
-																		</select>
-																	</div>
-																</div>
+														<!-- GPA -->
+														<div class="form-group">
+															<label for="gpa{{ student['student_id'] }}"
+																class="form-label">Điểm trung bình (GPA)</label>
+															<input type="number" step="0.01" class="form-control"
+																id="gpa{{ student['student_id'] }}" name="gpa"
+																value="{{ student['gpa'] }}" required>
+														</div>
 
-															</div>
+														<!-- Số tín chỉ hoàn thành -->
+														<div class="form-group">
+															<label for="credits_completed{{ student['student_id'] }}"
+																class="form-label">Số tín chỉ đã hoàn thành</label>
+															<input type="number" class="form-control"
+																id="credits_completed{{ student['student_id'] }}"
+																name="credits_completed"
+																value="{{ student['credits_completed'] }}" required>
+														</div>
 
+														<!-- Công việc bán thời gian -->
+														<div class="form-group">
+															<label for="part_time_job{{ student['student_id'] }}"
+																class="form-label">Công việc bán thời gian</label>
+															<select class="form-control"
+																id="part_time_job{{ student['student_id'] }}"
+																name="part_time_job" required>
+																<option value="" {% if not student['part_time_job']
+																	%}selected{% endif %}>Chọn trạng thái</option>
+																<option value="Có" {% if student['part_time_job']=='Có'
+																	%}selected{% endif %}>Có</option>
+																<option value="Không" {% if
+																	student['part_time_job']=='Không' %}selected{% endif
+																	%}>Không</option>
+															</select>
+														</div>
 
-															<!-- Tình trạng kinh tế -->
+														<!-- Tình trạng sức khỏe -->
+														<div class="form-group">
+															<label for="health_status{{ student['student_id'] }}"
+																class="form-label">Tình trạng sức khỏe</label>
+															<select class="form-control"
+																id="health_status{{ student['student_id'] }}"
+																name="health_status" required>
+																<option value="" {% if not student['health_status']
+																	%}selected{% endif %}>Chọn tình trạng</option>
+																<option value="Bình Thường" {% if
+																	student['health_status']=='Bình Thường' %}selected{%
+																	endif %}>Bình Thường</option>
+																<option value="Bị Bệnh" {% if
+																	student['health_status']=='Bị Bệnh' %}selected{%
+																	endif %}>Bị Bệnh</option>
+															</select>
+														</div>
 
+														<!-- Kết quả -->
+														<div class="form-group">
+															<label for="result{{ student['student_id'] }}"
+																class="form-label">Kết quả</label>
+															<select class="form-control"
+																id="result{{ student['student_id'] }}" name="result"
+																required>
+																<option value="" {% if not student['result']
+																	%}selected{% endif %}>Chọn kết quả</option>
+																<option value="Qua Môn" {% if
+																	student['result']=='Qua Môn' %}selected{% endif %}>
+																	Qua Môn</option>
+																<option value="Rớt Môn" {% if
+																	student['result']=='Rớt Môn' %}selected{% endif %}>
+																	Rớt Môn</option>
+															</select>
+														</div>
 
-															<!-- Điểm trung bình (GPA) -->
-															<div class="form-group">
-																<label for="gpa" class="form-label">Điểm trung bình
-																	(GPA)</label>
-																<input type="number" step="0.01" class="form-control"
-																	name="gpa" id="gpa" value="{{ student['gpa'] }}"
-																	required>
-															</div>
-
-															<!-- Số tín chỉ hoàn thành -->
-															<div class="form-group">
-																<label for="credits_completed" class="form-label">Số tín
-																	chỉ đã hoàn thành</label>
-																<input type="number" class="form-control"
-																	name="credits_completed" id="credits_completed"
-																	value="{{ student['credits_completed'] }}" required>
-															</div>
-
-															<!-- Công việc bán thời gian -->
-															<div class="form-group">
-																<label for="part_time_job" class="form-label">Công việc
-																	bán thời gian</label>
-																<select class="form-control" name="part_time_job"
-																	id="part_time_job" required>
-																	<option value="" {% if not student['part_time_job']
-																		%}selected{% endif %}>Chọn trạng thái</option>
-																	<option value="Có" {% if
-																		student['part_time_job']=='Có' %}selected{%
-																		endif %}>Có</option>
-																	<option value="Không" {% if
-																		student['part_time_job']=='Không' %}selected{%
-																		endif %}>Không</option>
-																</select>
-															</div>
-
-															<!-- Tình trạng sức khỏe -->
-															<div class="form-group">
-																<label for="health_status" class="form-label">Tình trạng
-																	sức khỏe</label>
-																<select class="form-control" name="health_status"
-																	id="health_status" required>
-																	<option value="" {% if not student['health_status']
-																		%}selected{% endif %}>Chọn tình trạng sức khỏe
-																	</option>
-																	<option value="Bị Bệnh" {% if
-																		student['health_status']=='Bị Bệnh' %}selected{%
-																		endif %}>Bị Bệnh</option>
-																	<option value="Bình Thường " {% if
-																		student['health_status']=='Bình Thường '
-																		%}selected{% endif %}>Bình Thường </option>
-																</select>
-															</div>
-
-															<!-- Kết quả -->
-															<div class="form-group">
-																<label for="result" class="form-label">Kết quả</label>
-																<select class="form-control" name="result" id="result"
-																	required>
-																	<option value="" {% if not student['result']
-																		%}selected{% endif %}>Chọn kết quả</option>
-																	<option value="Rớt Môn" {% if student['result']=='Rớt Môn'
-																		%}selected{% endif %}>Rớt Môn</option>
-																	<option value="Qua Môn" {% if student['result']=='Qua Môn'
-																		%}selected{% endif %}>Qua Môn</option>
-																</select>
-															</div>
-
-															<!-- Nút cập nhật -->
-															<div class="d-flex justify-content-end mt-3">
-																<button type="submit" class="btn btn-primary">Cập
-																	nhật</button>
-															</div>
-														</form>
-													</div>
+														<!-- Nút cập nhật -->
+														<div class="d-flex justify-content-end mt-3">
+															<button type="submit" class="btn btn-primary">Cập
+																nhật</button>
+														</div>
+													</form>
 												</div>
 											</div>
 										</div>
@@ -590,6 +577,14 @@
 			</div>
 		</div>
 	</div>
+
+
+
+
+
+
+
+
 </body>
 
 
