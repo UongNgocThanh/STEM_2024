@@ -12,10 +12,12 @@ app.secret_key = 'secret_key'
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 
+import requests
+
 
 # Kết nối cơ sở dữ liệu SQLite
 def get_db_connection():
-    conn = sqlite3.connect('student.db')  # Thay 'student.db' thành tên cơ sở dữ liệu của bạn
+    conn = sqlite3.connect('student.db') 
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -28,9 +30,9 @@ def list_students():
     conn = get_db_connection()
     students = conn.execute("SELECT * FROM students").fetchall()
     total_students = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
-    total_failed_students = conn.execute("SELECT COUNT(*) FROM students WHERE result = 'Rớt Môn'").fetchone()[0]
+    total_failed_students = conn.execute("SELECT COUNT(*) FROM students WHERE result = 'Rớt môn'").fetchone()[0]
     partTime_students = conn.execute("SELECT COUNT(*) FROM students WHERE part_time_job = 'Có'").fetchone()[0]
-    total_heathless_students = conn.execute("SELECT COUNT(*) FROM students WHERE health_status = 'Bị Bệnh'").fetchone()[0]
+    total_heathless_students = conn.execute("SELECT COUNT(*) FROM students WHERE health_status = 'Bị bệnh'").fetchone()[0]
     current_datetime = datetime.now().strftime('%a, %d %b %Y')  # Format: Sun, 29 Nov 2019
     name = session['name']
     username = session['username']
@@ -42,7 +44,8 @@ def list_students():
                             total_failed_students=total_failed_students,
                             current_datetime=current_datetime,
                             partTime_students=partTime_students,
-                            total_heathless_students=total_heathless_students, name = name, username=username)
+                            total_heathless_students=total_heathless_students, 
+                            name = name, username=username)
 # Hàm kiểm tra tính hợp lệ của email
 def is_valid_email(email):
     # Biểu thức chính quy để kiểm tra định dạng email hợp lệ
@@ -164,12 +167,45 @@ def create_student():
         age = request.form["age"]
         gender = request.form["gender"]
         economic_status = request.form["economic_status"]
-        gpa = request.form["gpa"]
+        gpa = float(request.form["gpa"])
         credits_completed = request.form["credits_completed"]
-        days_absent = request.form["days_absent"]
+        days_absent = int(request.form["days_absent"])
         part_time_job = request.form["part_time_job"]
         health_status = request.form["health_status"]
-        result = request.form["result"]
+
+        # Map gia tri tu form sang gia tri ma api yeu cau
+        economic_status_map = {"Nghèo": 0, "Cận nghèo": 1, "Bình thường": 2, "Giàu": 3}
+        part_time_job_map = {"Có": 1, "Không": 0}
+        health_status_map = {"Bình thường": 0, "Bị bệnh": 1}
+
+        # Convert gtri
+        economy = economic_status_map.get(economic_status, -1) #-1 de phong loi
+        part_time = part_time_job_map.get(part_time_job, -1)
+        health_statuss = health_status_map.get(health_status, -1)
+
+        # Kiểm tra lỗi nếu không có giá trị hợp lệ
+        if economy == -1 or part_time == -1 or health_statuss == -1:
+            return "Dữ liệu không hợp lệ", 400
+
+        # Chuẩn bị payload gửi đến API
+        ai_payload = {
+            "economy": economy,
+            "gpa": gpa,
+            "absent_days": days_absent,
+            "part_time": part_time,
+            "health_status": health_statuss
+        }
+        # Gui request
+        try:
+            ai_response = requests.post("http://127.0.0.1:5001/predict", json=ai_payload)
+            ai_response.raise_for_status()
+            ai_result = ai_response.json()
+
+            result = ai_result.get("result", 0)
+
+        except requests.RequestException as e:
+            flash(f"Lỗi khi gọi API AI: {e}", "danger")
+            return redirect(url_for('list_students'))
 
         conn = get_db_connection()
         conn.execute(
@@ -179,7 +215,12 @@ def create_student():
         conn.commit()
         conn.close()
 
-        flash("Thêm sinh viên thành công!",'success')
+        accuracy_response = requests.get("http://127.0.0.1:5001/evaluate")
+        accuracy_response.raise_for_status()
+
+        accuracy = accuracy_response.json().get("accuracy", 0)
+
+        flash(f"Thêm sinh viên thành công! Độ chính xác của thông tin này là {accuracy}",'success')
         return redirect(url_for('list_students'))
 
 # Route để sửa thông tin học sinh
@@ -194,12 +235,52 @@ def edit_student(id):
         age = request.form["age"]
         gender = request.form["gender"]
         economic_status = request.form["economic_status"]
-        gpa = request.form["gpa"]
+        gpa = float(request.form["gpa"])
         credits_completed = request.form["credits_completed"]
-        days_absent = request.form["days_absent"]
+        days_absent = int(request.form["days_absent"])
         part_time_job = request.form["part_time_job"]
         health_status = request.form["health_status"]
-        result = request.form["result"]
+
+        # Map các giá trị từ form sang giá trị API yêu cầu
+        economic_status_map = {"Nghèo": 0, "Cận nghèo": 1, "Bình thường": 2, "Giàu": 3}
+        part_time_job_map = {"Có": 1, "Không": 0}
+        health_status_map = {"Bình thường": 0, "Bị bệnh": 1}
+
+        # Debug log để kiểm tra các giá trị
+        print("Economic Status:", economic_status)
+        print("Part-time Job:", part_time_job)
+        print("Health Status:", health_status)
+
+        # Convert giá trị
+        economy = economic_status_map.get(economic_status, -1)
+        part_time = part_time_job_map.get(part_time_job, -1)
+        health_statuss = health_status_map.get(health_status, -1)
+        print(economy)
+        print(part_time)
+        print(health_statuss)
+
+        # Kiểm tra lỗi nếu không có giá trị hợp lệ
+        if economy == -1 or part_time == -1 or health_statuss == -1:
+            return f"Dữ liệu không hợp lệ: {economic_status}, {part_time_job}, {health_statuss}", 400
+        
+        # Chuẩn bị payload gửi đến API
+        ai_payload = {
+            "economy": economy,
+            "gpa": gpa,
+            "absent_days": days_absent,
+            "part_time": part_time,
+            "health_status": health_statuss
+        }
+
+        try:
+            # Gửi yêu cầu đến API để dự đoán kết quả
+            ai_response = requests.post("http://127.0.0.1:5001/predict", json=ai_payload)
+            ai_response.raise_for_status()
+            ai_result = ai_response.json()
+            result = ai_result.get("result", 0)
+        except requests.RequestException as e:
+            flash(f"Lỗi khi gọi API AI: {e}", "danger")
+            return redirect(url_for('list_students'))
 
         # Cập nhật thông tin học sinh vào cơ sở dữ liệu
         conn = get_db_connection()
@@ -210,7 +291,12 @@ def edit_student(id):
         conn.commit()
         conn.close()
 
-        flash('Đã cập nhật thành công thông tin sinh viên!','success')
+        accuracy_response = requests.get("http://127.0.0.1:5001/evaluate")
+        accuracy_response.raise_for_status()
+
+        accuracy = accuracy_response.json().get("accuracy", 0)
+
+        flash(f'Đã cập nhật thành công thông tin sinh viên! Độ chính xác của thông tin này là {accuracy}','success')
         return redirect(url_for('list_students'))  # Redirect về danh sách học sinh
 
     # Nếu là GET request, trả về form để sửa thông tin học sinh
