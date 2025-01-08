@@ -47,7 +47,7 @@
 		<div class="page-wrapper">
 			<div class="content container-fluid">
 				<div class="page-name 	mb-4">
-					<h4 class="m-0"><img src="static/assets/img/avt.jpg" class="mr-1" alt="profile" /> Chào {{name}}!
+					<h4 class="m-0"><img src="static/assets/img/avt.jpg" class="mr-1" alt="profile" /> Welcome Admin
 					</h4>
 					<label>{{ current_datetime }}</label>
 				</div>
@@ -57,6 +57,7 @@
 							<ul class="breadcrumb">
 								<li class="breadcrumb-item"><a href="{{ url_for('index')}}"><img
 											src="static/assets/img/dash.png" class="mr-3" alt="breadcrumb" />Home</a>
+
 								</li>
 								<li class="breadcrumb-item active">Dashboard</li>
 							</ul>
@@ -184,10 +185,12 @@
 				<div class="col-xl-12 col-sm-12 col-12 mb-4" style="margin-top: 100px;">
 					<div class="head-link-set">
 						<ul>
-							<li><a class="active" href="#">Danh sách sinh viên</a></li>
+							<li><a class="active" href="#">All</a></li>
+							<li><a href="#">Teams</a></li>
+							<li><a href="#">Offices</a></li>
 						</ul>
 
-						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm">Thêm sinh viên</a>
+						<a class="btn-add" data-bs-toggle="modal" data-bs-target="#addStudentForm">Add Person</a>
 					</div>
 				</div>
 
@@ -212,6 +215,9 @@
 				</div>
 				<div class="col-xl-12 col-sm-12 col-12 mb-4">
 					<div class="card">
+						<div class="table-heading">
+							<h2>Danh Sách Sinh Viên</h2>
+						</div>
 						<div class="table-responsive">
 							<table class="table  custom-table no-footer">
 								<thead>
@@ -231,7 +237,6 @@
 									</tr>
 								</thead>
 								<tbody>
-
 									{% for student in students %}
 									<tr {% if student['result'] == 'Rớt môn' %} class="failed" {% endif %}>
 										<td>{{ student['student_id'] }}</td>
@@ -351,9 +356,14 @@
 																				student['economic_status']=='Giàu'
 																				%}selected{% endif %}>Giàu</option>
 
-																		</select>
-																	</div>
-																</div>
+														<!-- GPA -->
+														<div class="form-group">
+															<label for="gpa{{ student['student_id'] }}"
+																class="form-label">Điểm trung bình (GPA)</label>
+															<input type="number" step="0.01" class="form-control"
+																id="gpa{{ student['student_id'] }}" name="gpa"
+																value="{{ student['gpa'] }}" required>
+														</div>
 
 															</div>
 															<!-- Điểm trung bình (GPA) -->
@@ -556,6 +566,14 @@
 			</div>
 		</div>
 	</div>
+
+
+
+
+
+
+
+
 </body>
 
 
