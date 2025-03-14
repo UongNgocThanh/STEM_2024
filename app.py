@@ -5,7 +5,6 @@ from datetime import datetime
 # from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import re  # Import thư viện re để kiểm tra biểu thức chính quy
-# from flask_login import login_required
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
@@ -25,7 +24,6 @@ def get_db_connection():
 @app.route("/students")
 def list_students():
     if 'user_id' not in session:
-        # flash("Vui lòng đăng nhập để truy cập trang này", "danger")
         return redirect(url_for('login'))
     conn = get_db_connection()
     students = conn.execute("SELECT * FROM students").fetchall()
@@ -33,7 +31,7 @@ def list_students():
     total_failed_students = conn.execute("SELECT COUNT(*) FROM students WHERE result = 'Rớt môn'").fetchone()[0]
     partTime_students = conn.execute("SELECT COUNT(*) FROM students WHERE part_time_job = 'Có'").fetchone()[0]
     total_heathless_students = conn.execute("SELECT COUNT(*) FROM students WHERE health_status = 'Bị bệnh'").fetchone()[0]
-    current_datetime = datetime.now().strftime('%a, %d %b %Y')  # Format: Sun, 29 Nov 2019
+    current_datetime = datetime.now().strftime('%a, %d %b %Y') 
     name = session['name']
     username = session['username']
 
@@ -48,7 +46,6 @@ def list_students():
                             name = name, username=username)
 # Hàm kiểm tra tính hợp lệ của email
 def is_valid_email(email):
-    # Biểu thức chính quy để kiểm tra định dạng email hợp lệ
     email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
     return bool(re.match(email_regex, email))
 
@@ -63,29 +60,24 @@ def login():
         password = request.form.get('password', '').strip()
         errors = []
 
-        # Kiểm tra các trường nhập vào
         if not username:
             errors.append("Tên tài khoản không được để trống.")
         if not password:
             errors.append("Mật khẩu không được để trống.")
-        
-        # Nếu có lỗi, hiển thị thông báo và dừng
+
         if errors:
             for error in errors:
                 flash(error, "danger")
             return render_template("login.html")
 
         try:
-            # Sử dụng `with` để đảm bảo đóng kết nối
             with get_db_connection() as conn:
                 user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
 
-            # Kiểm tra thông tin đăng nhập
             if user and check_password_hash(user['password'], password):
                 session['user_id'] = user['id']
                 session['name'] = user['name']
                 session['username'] = user['username']
-                # flash("Đăng nhập thành công!", "success")
                 return redirect(url_for('index'))
             else:
                 flash("Tài khoản hoặc mật khẩu không đúng!", "danger")
@@ -106,8 +98,6 @@ def register():
         confirm_password = request.form.get('confirm_password', '').strip()
         
         errors = []
-
-        # Kiểm tra các điều kiện hợp lệ
         if not name:
             errors.append("Họ và tên không được để trống.")
         
@@ -129,7 +119,6 @@ def register():
                 flash(error, "danger")
             return render_template("register.html")
         
-        # Kiểm tra xem tài khoản đã tồn tại chưa
         try:
             conn = get_db_connection()
             existing_user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
@@ -137,7 +126,6 @@ def register():
                 flash("Tên tài khoản đã tồn tại.", "danger")
                 return render_template("register.html")
 
-            # Tạo tài khoản mới nếu hợp lệ
             hashed_password = generate_password_hash(password)
             conn.execute("INSERT INTO users (name, username, password) VALUES (?, ?, ?)", (name, username, hashed_password))
             conn.commit()
@@ -157,7 +145,6 @@ def logout():
     session.pop('user_id', None)
     session.pop('username', None)
     session.pop('name', None)
-    # flash("Đăng xuất thành công!", "success")
     return redirect(url_for('index'))
 
 # Route để thêm học sinh
@@ -173,21 +160,17 @@ def create_student():
         part_time_job = request.form["part_time_job"]
         health_status = request.form["health_status"]
 
-        # Map gia tri tu form sang gia tri ma api yeu cau
         economic_status_map = {"Nghèo": 0, "Cận nghèo": 1, "Bình thường": 2, "Giàu": 3}
         part_time_job_map = {"Có": 1, "Không": 0}
         health_status_map = {"Bình thường": 0, "Bị bệnh": 1}
 
-        # Convert gtri
-        economy = economic_status_map.get(economic_status, -1) #-1 de phong loi
+        economy = economic_status_map.get(economic_status, -1)
         part_time = part_time_job_map.get(part_time_job, -1)
         health_statuss = health_status_map.get(health_status, -1)
 
-        # Kiểm tra lỗi nếu không có giá trị hợp lệ
         if economy == -1 or part_time == -1 or health_statuss == -1:
             return "Dữ liệu không hợp lệ", 400
 
-        # Chuẩn bị payload gửi đến API
         ai_payload = {
             "economy": economy,
             "gpa": gpa,
@@ -297,9 +280,7 @@ def edit_student(id):
         accuracy = accuracy_response.json().get("accuracy", 0)
 
         flash(f'Đã cập nhật thành công thông tin sinh viên! Độ chính xác của thông tin này là {accuracy}','success')
-        return redirect(url_for('list_students'))  # Redirect về danh sách học sinh
-
-    # Nếu là GET request, trả về form để sửa thông tin học sinh
+        return redirect(url_for('list_students'))  
 
 
 # Route để xóa học sinh
@@ -316,11 +297,8 @@ def delete_student(id):
 @app.route('/')
 def index():
     if 'user_id' not in session:
-        # flash("Vui lòng đăng nhập để truy cập trang này", "danger")
         return redirect(url_for('login'))
-    
-    # Thực hiện các thao tác cần thiết để lấy dữ liệu cho dashboard nếu có
-    return redirect(url_for('list_students'))  # Thay 'index.html' bằng tên template của bạn
+    return redirect(url_for('list_students'))
 
 if __name__ == '__main__':
     app.run(debug=True)

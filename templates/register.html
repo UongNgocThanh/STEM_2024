@@ -34,9 +34,8 @@
 						{% for category, message in messages %}
 						<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
 							{{ message }}
-							<!-- Thay đổi nút đóng bằng Font Awesome -->
 							<button type="button" class="close" data-bs-dismiss="alert" aria-label="Đóng">
-								<i class="fa fa-times"></i> <!-- Font Awesome biểu tượng đóng -->
+								<i class="fa fa-times"></i>
 							</button>
 						</div>
 						{% endfor %}
@@ -53,7 +52,8 @@
 							<form action="{{ url_for('register') }}" method="POST">
 								<div class="form-group">
 									<label class="form-control-label">Họ và tên</label>
-									<input style="height: calc(1.6em + 1.21875rem);" class="form-control" type="text" name="name" required>
+									<input style="height: calc(1.6em + 1.21875rem);" class="form-control" type="text"
+										name="name" required>
 								</div>
 								<div class="form-group">
 									<label class="form-control-label">Địa chỉ email</label>
@@ -83,7 +83,8 @@
 									class="google"><i class="fab fa-google"></i></a>
 							</div>
 
-							<div class="text-center dont-have">Bạn đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a>
+							<div class="text-center dont-have">Bạn đã có tài khoản? <a
+									href="{{ url_for('login') }}">Đăng nhập</a>
 							</div>
 						</div>
 					</div>

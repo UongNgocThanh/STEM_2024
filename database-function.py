@@ -11,7 +11,6 @@ def get_db_connection():
 @app.route('/add_student', methods=['POST'])
 def add_student():
     try:
-        # Nhận dữ liệu từ request
         name = request.form['name']
         age = request.form['age']
         gender = request.form['gender']
@@ -22,7 +21,6 @@ def add_student():
         health_status = request.form['health_status']
         result = request.form['result']
 
-        # Kết nối và thêm dữ liệu vào cơ sở dữ liệu
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('''
